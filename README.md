@@ -114,7 +114,3 @@ Open the local Flask URLs printed in the terminals. If both applications use the
 ## Security Note
 
 This project is intended for educational and experimental purposes. Review and test the implementation before using it in security-critical applications. Do not publish private keys, passwords, or actual session secrets.
-
-## Author
-
-Add your name and academic affiliation here if you wish.
