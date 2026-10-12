@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bob - Hybrid PQC Secure Communication</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f1f3f6;
+            color: #111827;
+        }
+
+        header {
+            background: #1f2937;
+            color: white;
+            text-align: center;
+            padding: 25px;
+        }
+
+        header h1 {
+            margin: 0 0 12px;
+        }
+
+        .container {
+            width: 94%;
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            border: none;
+            border-radius: 5px;
+            padding: 10px 14px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .danger {
+            background: #dc2626;
+        }
+
+        .panel {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px #00000015;
+        }
+
+        .field {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 60px;
+            resize: vertical;
+            padding: 8px;
+            border: 1px solid #bbb;
+            border-radius: 5px;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .log-title {
+            margin-top: 20px;
+        }
+
+        .log-box {
+            height: 330px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            background: #111;
+            color: #00ff66;
+            padding: 12px;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Bob - Hybrid PQC Secure Communication</h1>
+    <p>ML-KEM-512 + HKDF-SHA256 + AES-256-GCM</p>
+</header>
+
+<div class="container">
+
+    <div class="buttons">
+        <button onclick="sendCommand('CHECK_PUBLIC_KEY')">
+            3. Check Public Key
+        </button>
+
+        <button onclick="sendCommand('VERIFY_PUBLIC_KEY')">
+            4. Verify Public Key
+        </button>
+
+        <button onclick="sendCommand('ENCAPSULATE')">
+            5. Encapsulate
+        </button>
+
+        <button onclick="sendCommand('SEND_CIPHERTEXT')">
+            6. Send Ciphertext
+        </button>
+
+        <button onclick="sendCommand('DERIVE_AES')">
+            9. Derive AES
+        </button>
+
+        <button onclick="sendCommand('ESTABLISH')">
+            10. Establish
+        </button>
+
+        <button class="danger" onclick="clearDisplay()">
+            Clear Display
+        </button>
+    </div>
+
+    <div class="panel">
+        <h2>Bob</h2>
+
+        <div class="field">
+            <label>Shared Secret</label>
+            <textarea id="sharedSecret" readonly>-</textarea>
+        </div>
+
+        <div class="field">
+            <label>AES-256 Key</label>
+            <textarea id="aesKey" readonly>-</textarea>
+        </div>
+
+        <div class="field">
+            <label>Nonce</label>
+            <textarea id="nonce" readonly>-</textarea>
+        </div>
+
+        <div class="field">
+            <label>Ciphertext</label>
+            <textarea id="ciphertext" readonly>-</textarea>
+        </div>
+
+        <div class="field">
+            <label>GCM Authentication Tag</label>
+            <textarea id="tag" readonly>-</textarea>
+        </div>
+
+        <div class="field">
+            <label>Authentication</label>
+            <textarea id="authentication" readonly>-</textarea>
+        </div>
+
+        <div class="field">
+            <label>Received Message</label>
+            <textarea id="receivedMessage" readonly>-</textarea>
+        </div>
+    </div>
+
+    <h2 class="log-title">Bob Communication Log</h2>
+    <div id="logs" class="log-box"></div>
+
+</div>
+
+<script>
+    async function sendCommand(command) {
+        try {
+            const response = await fetch("/command", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    command: command
+                })
+            });
+
+            const result = await response.json();
+
+            if (!result.success) {
+                alert("Command failed");
+            }
+
+            await updateStatus();
+
+        } catch (error) {
+            alert(error);
+        }
+    }
+
+    async function clearDisplay() {
+        await fetch("/clear", {
+            method: "POST"
+        });
+
+        await updateStatus();
+    }
+
+    function setValue(id, value) {
+        document.getElementById(id).value = value || "-";
+    }
+
+    async function updateStatus() {
+        try {
+            const response = await fetch("/status");
+            const data = await response.json();
+
+            setValue("sharedSecret", data.shared_secret);
+            setValue("aesKey", data.aes_key);
+            setValue("nonce", data.nonce);
+            setValue("ciphertext", data.ciphertext);
+            setValue("tag", data.tag);
+            setValue("authentication", data.authentication);
+            setValue("receivedMessage", data.received_message);
+
+            document.getElementById("logs").textContent =
+                data.logs.join("\n");
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    setInterval(updateStatus, 1000);
+    updateStatus();
+</script>
+
+</body>
+</html>
